@@ -1,0 +1,68 @@
+# Feature: User Authentication
+# This feature covers login, logout, and registration flows.
+
+Feature: User Authentication
+
+  Background:
+    Given the application is running
+    And the database has been seeded with test users
+
+  # --- Login ---
+
+  Scenario: Successful login with valid credentials
+    Given I am on the login page
+    When I enter username "john.doe@example.com"
+    And I enter password "SecurePass123"
+    And I click the "Login" button
+    Then I should be redirected to the dashboard
+    And I should see a welcome message "Welcome, John!"
+
+  Scenario: Failed login with incorrect password
+    Given I am on the login page
+    When I enter username "john.doe@example.com"
+    And I enter password "WrongPassword"
+    And I click the "Login" button
+    Then I should see an error message "Invalid email or password"
+    And I should remain on the login page
+
+  Scenario Outline: Login attempt with missing fields
+    Given I am on the login page
+    When I enter username "<username>"
+    And I enter password "<password>"
+    And I click the "Login" button
+    Then I should see a validation error "<error_message>"
+
+    Examples:
+      | username                | password       | error_message            |
+      |                         | SecurePass123  | Email is required        |
+      | john.doe@example.com    |                | Password is required     |
+      |                         |                | Email is required        |
+
+  # --- Logout ---
+
+  Scenario: User logs out successfully
+    Given I am logged in as "john.doe@example.com"
+    When I click the "Logout" button
+    Then I should be redirected to the login page
+    And I should see the message "You have been logged out"
+
+  # --- Registration ---
+
+  Scenario: Successful new user registration
+    Given I am on the registration page
+    When I fill in the registration form with:
+      | field            | value                  |
+      | First Name       | Jane                   |
+      | Last Name        | Doe                    |
+      | Email            | jane.doe@example.com   |
+      | Password         | NewPass456!            |
+      | Confirm Password | NewPass456!            |
+    And I click the "Register" button
+    Then a new account should be created
+    And I should be redirected to the onboarding page
+
+  Scenario: Registration fails when email already exists
+    Given I am on the registration page
+    And the email "john.doe@example.com" is already registered
+    When I submit the registration form with email "john.doe@example.com"
+    Then I should see an error message "An account with this email already exists"
